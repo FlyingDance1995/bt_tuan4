@@ -1,5 +1,4 @@
 ﻿#include "Account.h"
-#include "Account1.h"
 #include "Chat.h"
 #include<stdio.h>
 #include <iostream>
