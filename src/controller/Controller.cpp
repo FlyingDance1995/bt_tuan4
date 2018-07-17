@@ -124,7 +124,6 @@ void Account::ShowMess(int ID) {
 		conn.Open();
 		conn.ShowSendMess(conn.db, id);
 		conn.ShowRecMess(conn.db, id);
-		
 	}
 	else {
 		cout << "+================+ Ban chua dang nhap. +================+\n\n";
@@ -303,7 +302,7 @@ void Account::UpdateFriend(int id) {
 		if (id2 > 0) {
 			if (conn.CheckFriend(conn.db, id, id2)) {
 				
-				gender = new (char);
+				gender = new char;
 				name = new char;
 				address = new char;
 
@@ -314,7 +313,8 @@ void Account::UpdateFriend(int id) {
 				cin >> gender;
 				
 				cout << "Nhap Address: ";
-				cin >> address;
+				cin.ignore();
+				cin.getline(address, 100);
 
 				conn.UpdateFriend(conn.db, gender, name, address, id2);
 

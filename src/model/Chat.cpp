@@ -49,6 +49,21 @@ void Chat::Insert_Acc(sqlite3 *db, char *user, char *pass,char *ge, char *bir, c
 		cout << "+================+ SQL error: +================+" << zErrMsg << endl;
 		sqlite3_free(zErrMsg);
 	}
+
+	szSQL = "insert into user1 (gender1,name1,address1) values (?,?,?)";
+	rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
+	if (rc == SQLITE_OK) {
+		
+		sqlite3_bind_text(stmt, 1, ge, strlen(ge), 0);
+		sqlite3_bind_text(stmt, 2, na, strlen(na), 0);
+		sqlite3_bind_text(stmt, 3, add, strlen(add), 0);
+		sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+	}
+	else {
+		cout << "+================+ SQL error: +================+" << zErrMsg << endl;
+		sqlite3_free(zErrMsg);
+	}
 }
 void Chat::SelectMess(sqlite3 *db, int zID) {
 	if (!db)return;
@@ -116,14 +131,14 @@ void Chat::ShowMessDetail(sqlite3 *db, int id1, int id2) {
 }
 void Chat::UpdateFriend(sqlite3 *db, char *gender,char *name, char *address,int id) {
 	if (!db)return;
-	szSQL = "INSERT INTO user1 (gender1,name1,address1,id1) VALUES (?,?,?,?)";
+	szSQL = "update user1 set gender1 =?,name1 = ?,address1 =? where id1=?";
 	rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
 	if (rc == SQLITE_OK) {
 		int isblock = 0;
 		sqlite3_bind_text(stmt, 1, gender, strlen(gender), 0);
 		sqlite3_bind_text(stmt, 2, name, strlen(name), 0);
-		sqlite3_bind_text(stmt, 2, address, strlen(address), 0);
-		sqlite3_bind_int(stmt, 1, id);
+		sqlite3_bind_text(stmt, 3, address, strlen(address), 0);
+		sqlite3_bind_int(stmt, 4, id);
 
 		sqlite3_step(stmt);
 		sqlite3_finalize(stmt);
@@ -224,16 +239,16 @@ void Chat::ShowFriend(sqlite3 *db, int id1) {
 	}
 }
 void Chat::ShowSendMess(sqlite3 *db, int id1) {
-	cout << " +================+ Tin Nhan Da Gui +================+ \n";
+	cout << " +================+ Tin Nhan Da Gui +================+ \n\n";
 	if (!db)return;
-	szSQL = "SELECT contend FROM messenger where idsen=?";
+	szSQL = "SELECT * FROM messenger where idsen=?";
 	rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
 	if (rc == SQLITE_OK) {
 
 		sqlite3_bind_int(stmt, 1, id1);
 
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
-			cout << string((const char *)sqlite3_column_text(stmt, 0)) << endl;
+			cout << " + " << string((const char *)sqlite3_column_text(stmt, 2)) << " - Time: "<< string((const char *)sqlite3_column_text(stmt, 3))<< endl;
 		}
 		sqlite3_finalize(stmt);
 	}
@@ -243,16 +258,16 @@ void Chat::ShowSendMess(sqlite3 *db, int id1) {
 	}
 }
 void Chat::ShowRecMess(sqlite3 *db, int id1) {
-	cout << " +================+ Tin Nhan Da Nhan +================+ \n";
+	cout << " +================+ Tin Nhan Da Nhan +================+\n\n";
 	if (!db)return;
-	szSQL = "SELECT contend FROM messenger where idrec=?";
+	szSQL = "SELECT * FROM messenger where idrec=?";
 	rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
 	if (rc == SQLITE_OK) {
 
 		sqlite3_bind_int(stmt, 1, id1);
 
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
-			cout << string((const char *)sqlite3_column_text(stmt, 0)) << endl;
+			cout<< " + "<< string((const char *)sqlite3_column_text(stmt, 2))<< " - Time: " << string((const char *)sqlite3_column_text(stmt, 3)) << " - trang thai: " << sqlite3_column_int(stmt, 4) << endl;
 		}
 		sqlite3_finalize(stmt);
 	}
@@ -263,19 +278,16 @@ void Chat::ShowRecMess(sqlite3 *db, int id1) {
 }
 void Chat::Group(sqlite3 *db, int id, char *name, char* address) {
 	cout << "\n\n+================+ Ban be cung thanh pho +================+ \n";
+	list<string> abc;
 	if (!db)return;
-	szSQL = "SELECT DISTINCT user.address FROM (SELECT * FROM friend where (id1 = ?) AND isblock = 0) as A LEFT JOIN user ON (A.id2 = user.id)";
+	szSQL = "SELECT Distinct user1.address1 FROM (SELECT * FROM friend where (id1 = ?) AND isblock = 0) as A LEFT JOIN user1 ON (A.id2 = user1.id1)";
 	rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
 	if (rc == SQLITE_OK) {
 
 		sqlite3_bind_int(stmt, 1, id);
-		/*sqlite3_bind_text(stmt, 5, name, strlen(name), 0);
-		sqlite3_bind_text(stmt, 6, address, strlen(address), 0);*/
 		
-
-
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
-			cout << string((const char *)sqlite3_column_text(stmt, 0)) << endl;
+			abc.push_back(string((const char *)sqlite3_column_text(stmt, 0)));
 		}
 		sqlite3_finalize(stmt);
 	}
@@ -283,6 +295,29 @@ void Chat::Group(sqlite3 *db, int id, char *name, char* address) {
 		cout << "+================+ SQL error: +================+" << zErrMsg << endl;
 		sqlite3_free(zErrMsg);
 	}
+	for (list<std::string>::const_iterator it = abc.begin(); it != abc.end(); it++)
+	{
+		cout << *it << endl;
+		if (!db)return;
+		szSQL = "SELECT user1.name1 FROM user1 where address1 =? ";
+		rc = sqlite3_prepare_v2(db, szSQL, strlen(szSQL), &stmt, &pzTest);
+		if (rc == SQLITE_OK) {
+
+			sqlite3_bind_int(stmt, 1, id);
+			sqlite3_bind_text(stmt, 1, _strdup((*it).c_str()), strlen(_strdup((*it).c_str())), 0);
+			
+			while (sqlite3_step(stmt) == SQLITE_ROW) {
+				cout <<" - "<< string((const char *)sqlite3_column_text(stmt, 0)) << endl;
+			}
+			sqlite3_finalize(stmt);
+		}
+		else {
+			cout << "+================+ SQL error: +================+" << zErrMsg << endl;
+			sqlite3_free(zErrMsg);
+		}
+
+	}
+		
 }
 void Chat::ShowFriendDetail(sqlite3 *db,int id2) {
 	cout << "\n+================+ Friend Detail +================+\n\n";
